@@ -1,0 +1,9 @@
+Flask==3.0.3
+scikit-learn==1.5.1
+joblib==1.4.2
+numpy==2.1.1
+flaml==2.2.0
+pandas==2.2.2
+lightgbm==4.5.0
+requests==2.32.3
+xgboost==2.1.1
