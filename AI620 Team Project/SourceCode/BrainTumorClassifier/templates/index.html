@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Tumor Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brain Tumor Classifier</h1>
+        <form id="uploadForm">
+            <input type="file" id="fileInput" accept="image/*" required />
+            <button type="submit">Upload and Predict</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById("uploadForm");
+        const fileInput = document.getElementById("fileInput");
+        const resultDiv = document.getElementById("result");
+
+        // API URL from Chalice deployment
+        const apiUrl = 'https://llqlip6w89.execute-api.us-east-1.amazonaws.com/api/predict';
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            resultDiv.textContent = "";  // Clear previous results
+
+            const file = fileInput.files[0];
+            if (!file) {
+                resultDiv.textContent = "Please upload an image file.";
+                resultDiv.classList.add("error");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                resultDiv.textContent = "Processing... Please wait.";
+
+                // Send POST request to Chalice API endpoint
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    body: file,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                });
+
+                const result = await response.json();
+
+                // Display the result
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <strong>Predicted Class:</strong> ${result.predicted_class} <br>
+                        <strong>Confidence:</strong> ${(result.confidence * 100).toFixed(2)}%
+                    `;
+                    resultDiv.classList.remove("error");
+                } else {
+                    resultDiv.textContent = result.error || "An error occurred during prediction.";
+                    resultDiv.classList.add("error");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                resultDiv.textContent = "An error occurred. Please try again.";
+                resultDiv.classList.add("error");
+            }
+        });
+    </script>
+</body>
+</html>
